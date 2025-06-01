@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gedachten en gedichten</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .poem-title-font {
+        font-family: "Playfair Display", serif;
+      }
+      .poem-body-font {
+        font-family: "Lora", serif;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #fde8f0;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #e11d48;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #be123c;
+      }
+      #addPoemModalContent.opacity-0 {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+      #addPoemModalContent.opacity-100 {
+        transform: scale(1);
+        opacity: 1;
+      }
+      .tooltip {
+        position: relative;
+        display: inline-block;
+      }
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 120px;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 0;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -60px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .tooltip .tooltiptext::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #555 transparent transparent transparent;
+      }
+      .tooltip:hover .tooltiptext,
+      .tooltip.active .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+      }
+      input[type="file"]::-webkit-file-upload-button {
+        background-color: #fbcfe8;
+        color: #be185d;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+        font-weight: 500;
+      }
+      input[type="file"]::-webkit-file-upload-button:hover {
+        background-color: #f9a8d4;
+      }
+      input[type="file"] {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+        color: #4b5563;
+      }
+      #imagePreviewContainer {
+        max-height: 150px;
+        overflow: hidden;
+      }
+      #imagePreview {
+        max-width: 100%;
+        max-height: 150px;
+        object-fit: contain;
+        border-radius: 0.375rem;
+      }
+      .featured-poem-image {
+        width: 100%;
+        max-height: 400px; /* Increased height for featured image */
+        object-fit: cover;
+        border-radius: 0.5rem; /* Tailwind rounded-lg */
+        margin-bottom: 1.5rem; /* Tailwind mb-6, more spacing */
+        display: block;
+      }
+      .poem-image {
+        /* For non-featured cards */
+        width: 100%;
+        max-height: 200px; /* Standard height for regular cards */
+        object-fit: cover;
+        border-radius: 0.5rem; /* Tailwind rounded-lg */
+        margin-bottom: 1rem; /* Tailwind mb-4 */
+        display: block;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-rose-100 via-pink-100 to-sky-100 min-h-screen text-gray-800"
+  >
+    <header
+      class="py-5 md:py-6 shadow-lg bg-white/90 backdrop-blur-lg sticky top-0 z-50"
+    >
+      <div
+        class="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center"
+      >
+        <h1
+          class="text-2xl sm:text-3xl font-bold poem-title-font text-rose-600"
+        >
+          Gedachten en gedichten
+        </h1>
+        <button
+          id="addPoemBtn"
+          class="bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2.5 px-5 sm:px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105 text-sm sm:text-base"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 inline-block mr-1 -mt-0.5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 3a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V4a1 1 0 011-1z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Nieuw item
+        </button>
+      </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+      <section
+        id="featuredPoemSection"
+        class="mb-10 md:mb-12 hidden bg-white/70 backdrop-blur-md p-6 sm:p-8 rounded-xl shadow-xl border border-rose-200"
+      ></section>
+
+      <section id="poemsListSection">
+        <h2
+          class="text-xl sm:text-2xl font-semibold poem-title-font text-gray-700 mb-6"
+        >
+          Dagelijkse Mijmeringen
+        </h2>
+        <div id="loadingIndicator" class="text-center py-10">
+          <div
+            class="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-rose-500"
+          ></div>
+          <p class="text-lg text-gray-600 mt-4">Items laden...</p>
+        </div>
+        <div
+          id="poemsContainer"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
+        ></div>
+        <div id="noPoemsMessage" class="text-center py-10 hidden">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-16 w-16 mx-auto text-gray-400 mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+          <p class="text-xl text-gray-500 poem-body-font">
+            Nog geen niks geschreven. Tijd voor inspiratie!
+          </p>
+          <button
+            id="addFirstPoemBtn"
+            class="mt-6 bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105"
+          >
+            Stort je hart uit
+          </button>
+        </div>
+        <div
+          id="errorMessage"
+          class="text-center py-10 hidden bg-red-50 border border-red-200 rounded-lg p-6"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-12 w-12 mx-auto text-red-400 mb-3"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <p class="text-xl text-red-600 poem-body-font">
+            Oeps! Er ging iets mis.
+          </p>
+          <p class="text-red-500 mt-1">
+            Kon items niet laden. Controleer je verbinding of
+            Baserow-instellingen en probeer het opnieuw.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <div
+      id="addPoemModal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-[100] transition-opacity duration-300 ease-in-out opacity-0"
+    >
+      <div
+        id="addPoemModalContent"
+        class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-lg transition-all duration-300 ease-in-out opacity-0"
+      >
+        <div class="flex justify-between items-center mb-6">
+          <h3
+            class="text-xl sm:text-2xl font-semibold poem-title-font text-gray-700"
+          >
+            Maak een nieuw item
+          </h3>
+          <button
+            id="closeModalBtn"
+            class="text-gray-400 hover:text-gray-600 transition duration-150"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-7 w-7"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <form id="poemForm">
+          <div class="mb-4">
+            <label
+              for="poemTitle"
+              class="block text-sm font-medium text-gray-600 mb-1"
+              >Titel</label
+            >
+            <input
+              type="text"
+              id="poemTitle"
+              name="poemTitle"
+              required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 shadow-sm transition-colors duration-200"
+            />
+          </div>
+          <div class="mb-4">
+            <label
+              for="poemImageFile"
+              class="block text-sm font-medium text-gray-600 mb-1"
+              >Afbeelding (optioneel)</label
+            >
+            <input
+              type="file"
+              id="poemImageFile"
+              name="poemImageFile"
+              accept="image/*"
+              class="w-full"
+            />
+            <div id="imagePreviewContainer" class="mt-2 hidden">
+              <img id="imagePreview" src="#" alt="Voorbeeld afbeelding" />
+            </div>
+            <p class="text-xs text-gray-500 mt-1">
+              Kies een afbeelding om toe te voegen.
+            </p>
+          </div>
+          <div class="mb-6">
+            <label
+              for="poemMessage"
+              class="block text-sm font-medium text-gray-600 mb-1"
+              >Jouw tekst</label
+            >
+            <textarea
+              id="poemMessage"
+              name="poemMessage"
+              rows="8"
+              required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 shadow-sm transition-colors duration-200 poem-body-font"
+              placeholder="Stort je hart uit...&#10;&#10;Ondersteunt Markdown voor **vet**, *cursief*, en afbeeldingen:&#10;![alt tekst](afbeeldings_url)"
+            ></textarea>
+            <p class="text-xs text-gray-500 mt-1">
+              Markdown wordt ondersteund voor opmaak en afbeeldingen (bijv.
+              `![alt](url)`).
+            </p>
+          </div>
+          <div
+            class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3"
+          >
+            <button
+              type="button"
+              id="cancelModalBtn"
+              class="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-300 w-full sm:w-auto"
+            >
+              Annuleren
+            </button>
+            <button
+              type="submit"
+              id="submitPoemBtn"
+              class="bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 transform hover:scale-105 w-full sm:w-auto flex items-center justify-center"
+            >
+              <span id="submitText">Item Opslaan</span>
+              <svg
+                id="submitSpinner"
+                class="animate-spin ml-2 h-5 w-5 text-white hidden"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            </button>
+          </div>
+          <p
+            id="modalErrorMessage"
+            class="text-red-500 text-sm mt-4 text-center hidden"
+          ></p>
+        </form>
+      </div>
+    </div>
+
+    <footer class="text-center py-8 mt-12 border-t border-rose-200/70">
+      <p class="text-gray-600 text-sm">
+        Met <span class="text-rose-500 text-lg">&hearts;</span> gemaakt voor
+        iemand heel speciaal.
+      </p>
+    </footer>
+
+    <script>
+      // Baserow Configuration
+      const BASEROW_TOKEN = "P7bETm95pDZnha5OuV52mZSA0fxKjyFq";
+      const TABLE_ID = "558769";
+      const API_BASE_URL = "https://api.baserow.io";
+
+      // Field IDs from your Baserow table
+      const FIELD_ID_TITLE = "field_4482472";
+      const FIELD_ID_MESSAGE = "field_4482473";
+      const FIELD_ID_CREATED_ON = "field_4482476";
+      const FIELD_ID_IMAGE = "field_4482479";
+
+      // DOM Elements
+      const addPoemBtn = document.getElementById("addPoemBtn");
+      const addFirstPoemBtn = document.getElementById("addFirstPoemBtn");
+      const addPoemModal = document.getElementById("addPoemModal");
+      const addPoemModalContent = document.getElementById(
+        "addPoemModalContent"
+      );
+      const closeModalBtn = document.getElementById("closeModalBtn");
+      const cancelModalBtn = document.getElementById("cancelModalBtn");
+      const poemForm = document.getElementById("poemForm");
+      const poemTitleInput = document.getElementById("poemTitle");
+      const poemMessageInput = document.getElementById("poemMessage");
+      const poemImageFileInput = document.getElementById("poemImageFile");
+      const imagePreviewContainer = document.getElementById(
+        "imagePreviewContainer"
+      );
+      const imagePreview = document.getElementById("imagePreview");
+
+      const submitPoemBtn = document.getElementById("submitPoemBtn");
+      const submitText = document.getElementById("submitText");
+      const submitSpinner = document.getElementById("submitSpinner");
+      const modalErrorMessage = document.getElementById("modalErrorMessage");
+
+      const poemsContainer = document.getElementById("poemsContainer");
+      const featuredPoemSection = document.getElementById(
+        "featuredPoemSection"
+      );
+      const loadingIndicator = document.getElementById("loadingIndicator");
+      const noPoemsMessage = document.getElementById("noPoemsMessage");
+      const errorMessage = document.getElementById("errorMessage");
+
+      // --- Modal Handling & Image Preview ---
+      function openModal() {
+        poemForm.reset();
+        imagePreview.src = "#";
+        imagePreviewContainer.classList.add("hidden");
+        modalErrorMessage.classList.add("hidden");
+        modalErrorMessage.textContent = "";
+        addPoemModal.classList.remove("hidden");
+        setTimeout(() => {
+          addPoemModal.classList.remove("opacity-0");
+          addPoemModalContent.classList.remove("opacity-0", "scale-95");
+          addPoemModalContent.classList.add("opacity-100", "scale-100");
+        }, 10);
+      }
+
+      function closeModal() {
+        addPoemModalContent.classList.remove("opacity-100", "scale-100");
+        addPoemModalContent.classList.add("opacity-0", "scale-95");
+        addPoemModal.classList.add("opacity-0");
+        setTimeout(() => {
+          addPoemModal.classList.add("hidden");
+        }, 300);
+      }
+
+      poemImageFileInput.addEventListener("change", function (event) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            imagePreview.src = e.target.result;
+            imagePreviewContainer.classList.remove("hidden");
+          };
+          reader.readAsDataURL(file);
+        } else {
+          imagePreview.src = "#";
+          imagePreviewContainer.classList.add("hidden");
+        }
+      });
+
+      addPoemBtn.addEventListener("click", openModal);
+      if (addFirstPoemBtn) addFirstPoemBtn.addEventListener("click", openModal);
+      closeModalBtn.addEventListener("click", closeModal);
+      cancelModalBtn.addEventListener("click", closeModal);
+      addPoemModal.addEventListener("click", (e) => {
+        if (e.target === addPoemModal) {
+          closeModal();
+        }
+      });
+
+      // --- API Calls ---
+      async function uploadImageToBaserow(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/api/user-files/upload-file/`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Token ${BASEROW_TOKEN}`,
+              },
+              body: formData,
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Baserow Afbeelding Upload Fout:", errorData);
+            throw new Error(
+              errorData.detail?.file?.[0]?.error ||
+                errorData.error ||
+                "Kon afbeelding niet uploaden."
+            );
+          }
+          const result = await response.json();
+          return result;
+        } catch (error) {
+          console.error("Fout bij uploaden afbeelding naar Baserow:", error);
+          throw error;
+        }
+      }
+
+      async function fetchPoems() {
+        loadingIndicator.classList.remove("hidden");
+        poemsContainer.innerHTML = "";
+        featuredPoemSection.innerHTML = "";
+        featuredPoemSection.classList.add("hidden");
+        noPoemsMessage.classList.add("hidden");
+        errorMessage.classList.add("hidden");
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/api/database/rows/table/${TABLE_ID}/?user_field_names=false&order_by=-${FIELD_ID_CREATED_ON}`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Token ${BASEROW_TOKEN}`,
+              },
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Baserow API Fout:", errorData);
+            throw new Error(
+              `Netwerkantwoord was niet ok: ${response.statusText}`
+            );
+          }
+          const data = await response.json();
+          renderPoems(data.results);
+        } catch (error) {
+          console.error("Kon gedichten niet ophalen:", error);
+          errorMessage.classList.remove("hidden");
+        } finally {
+          loadingIndicator.classList.add("hidden");
+        }
+      }
+
+      async function submitPoem(event) {
+        event.preventDefault();
+        const title = poemTitleInput.value.trim();
+        const message = poemMessageInput.value.trim();
+        const imageFile = poemImageFileInput.files[0];
+
+        if (!title || !message) {
+          modalErrorMessage.textContent =
+            "Titel en Gedicht mogen niet leeg zijn.";
+          modalErrorMessage.classList.remove("hidden");
+          return;
+        }
+
+        modalErrorMessage.classList.add("hidden");
+        submitText.textContent = "Opslaan...";
+        submitSpinner.classList.remove("hidden");
+        submitPoemBtn.disabled = true;
+
+        let uploadedImageInfo = null;
+        if (imageFile) {
+          try {
+            submitText.textContent = "Afbeelding uploaden...";
+            uploadedImageInfo = await uploadImageToBaserow(imageFile);
+            if (!uploadedImageInfo || !uploadedImageInfo.name) {
+              throw new Error(
+                "Uploaden van afbeelding mislukt, geen bestandsnaam ontvangen."
+              );
+            }
+          } catch (error) {
+            modalErrorMessage.textContent = `Fout bij uploaden afbeelding: ${error.message}`;
+            modalErrorMessage.classList.remove("hidden");
+            submitText.textContent = "Gedicht Opslaan";
+            submitSpinner.classList.add("hidden");
+            submitPoemBtn.disabled = false;
+            return;
+          }
+        }
+
+        submitText.textContent = "Gedicht opslaan...";
+        const poemData = {
+          [FIELD_ID_TITLE]: title,
+          [FIELD_ID_MESSAGE]: message,
+        };
+
+        if (uploadedImageInfo) {
+          poemData[FIELD_ID_IMAGE] = [{ name: uploadedImageInfo.name }];
+        }
+
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/api/database/rows/table/${TABLE_ID}/?user_field_names=false`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Token ${BASEROW_TOKEN}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(poemData),
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Baserow POST Fout:", errorData);
+            let detailedError = "Kon gedicht niet opslaan.";
+            if (errorData.detail && typeof errorData.detail === "object") {
+              const fieldErrors = Object.values(errorData.detail)
+                .flat()
+                .map((err) => err.error || JSON.stringify(err))
+                .join(" ");
+              if (fieldErrors) detailedError = fieldErrors;
+            } else if (
+              errorData.detail &&
+              typeof errorData.detail === "string"
+            ) {
+              detailedError = errorData.detail;
+            } else if (errorData.error) {
+              detailedError = errorData.error;
+            }
+            throw new Error(detailedError);
+          }
+
+          closeModal();
+          fetchPoems();
+        } catch (error) {
+          console.error("Kon gedicht niet verzenden:", error);
+          modalErrorMessage.textContent = `Fout: ${error.message}`;
+          modalErrorMessage.classList.remove("hidden");
+        } finally {
+          submitText.textContent = "Gedicht Opslaan";
+          submitSpinner.classList.add("hidden");
+          submitPoemBtn.disabled = false;
+        }
+      }
+      poemForm.addEventListener("submit", submitPoem);
+
+      // --- Rendering Poems ---
+      function renderPoems(poems) {
+        if (!poems) {
+          console.error(
+            "renderPoems aangeroepen met null of undefined gedichtenarray"
+          );
+          errorMessage.classList.remove("hidden");
+          return;
+        }
+
+        if (poems.length === 0) {
+          noPoemsMessage.classList.remove("hidden");
+          return;
+        }
+
+        const latestPoem = poems[0];
+        if (latestPoem) {
+          const featuredPoemHTML = createPoemCardHTML(latestPoem, true);
+          if (featuredPoemHTML) {
+            featuredPoemSection.innerHTML = featuredPoemHTML;
+            const actualFeaturedElement = featuredPoemSection.firstElementChild;
+            if (actualFeaturedElement) {
+              featuredPoemSection.classList.remove("hidden");
+              addCardButtonListeners(actualFeaturedElement, latestPoem);
+            } else {
+              console.error(
+                "Uitgelicht gedicht <article> element niet gevonden na instellen innerHTML voor gedicht ID:",
+                latestPoem.id || "onbekend"
+              );
+            }
+          } else {
+            console.error(
+              "Kon HTML niet genereren voor uitgelicht gedicht ID:",
+              latestPoem.id || "onbekend"
+            );
+          }
+        }
+
+        const poemsToDisplay = latestPoem ? poems.slice(1) : poems;
+        if (poemsToDisplay.length === 0 && latestPoem) {
+          poemsContainer.innerHTML = `<p class="col-span-full text-center text-gray-500 poem-body-font py-5">Meer gedichten zullen hier verschijnen.</p>`;
+        } else if (poemsToDisplay.length === 0 && !latestPoem) {
+          noPoemsMessage.classList.remove("hidden");
+        } else {
+          poemsToDisplay.forEach((poem) => {
+            if (!poem) {
+              console.warn(
+                "Sla een null of undefined gedichtobject over in de poemsToDisplay array."
+              );
+              return;
+            }
+            const poemCardContainer = document.createElement("div");
+            const poemHTML = createPoemCardHTML(poem, false);
+
+            if (poemHTML) {
+              poemCardContainer.innerHTML = poemHTML;
+              const elementToAppendAndUse = poemCardContainer.firstElementChild;
+
+              if (elementToAppendAndUse) {
+                poemsContainer.appendChild(elementToAppendAndUse);
+                addCardButtonListeners(elementToAppendAndUse, poem);
+              } else {
+                console.error(
+                  "Gedicht <article> element niet gevonden in poemCardContainer voor ID:",
+                  poem.id || "onbekend"
+                );
+                const errorCardDiv = document.createElement("div");
+                errorCardDiv.innerHTML = `<article class="bg-red-100 p-4 rounded-lg shadow-md"><h3 class="poem-title-font text-xl text-red-700">Fout bij laden</h3><p class="text-red-600">Kon dit gedicht niet correct weergeven (ID: ${
+                  poem.id || "onbekend"
+                }).</p></article>`;
+                if (errorCardDiv.firstElementChild)
+                  poemsContainer.appendChild(errorCardDiv.firstElementChild);
+              }
+            } else {
+              console.error(
+                "Kon HTML string niet genereren voor gedicht ID:",
+                poem.id || "onbekend"
+              );
+            }
+          });
+        }
+
+        if (window.location.hash) {
+          try {
+            const elementId = window.location.hash.substring(1);
+            const element = document.getElementById(elementId);
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth" });
+            }
+          } catch (e) {
+            console.warn("Fout bij scrollen naar hash:", e);
+          }
+        }
+      }
+
+      function formatDate(dateString) {
+        if (!dateString) return "Even geleden";
+        const date = new Date(dateString);
+        return date.toLocaleDateString("nl-NL", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function createPoemCardHTML(poem, isFeatured) {
+        if (!poem) {
+          console.error(
+            "createPoemCardHTML aangeroepen met null of undefined gedichtobject"
+          );
+          return `<article class="bg-red-100 p-4 rounded-lg shadow-md"><p class="text-red-700 poem-body-font">Fout: Gedichtdata is ongeldig.</p></article>`;
+        }
+
+        const title = poem[FIELD_ID_TITLE] || "Naamloos Gedicht";
+        let messageHTML;
+        try {
+          const messageContent = poem[FIELD_ID_MESSAGE];
+          messageHTML = messageContent
+            ? marked.parse(String(messageContent))
+            : "<p><em>Geen inhoud.</em></p>";
+        } catch (e) {
+          console.error(
+            "Fout bij parsen van Markdown voor gedicht ID:",
+            poem.id || "onbekend",
+            e
+          );
+          messageHTML =
+            '<p class="text-red-500"><em>Fout bij het weergeven van gedichtinhoud. Controleer de console voor details.</em></p>';
+        }
+
+        const createdDate = formatDate(poem[FIELD_ID_CREATED_ON]);
+        const poemIdSuffix =
+          poem.id || `temp-${Math.random().toString(36).substr(2, 9)}`;
+        const poemId = `poem-${poemIdSuffix}`;
+
+        let imageHTML = "";
+        const imageFieldData = poem[FIELD_ID_IMAGE];
+        const imageCssClass = isFeatured ? "featured-poem-image" : "poem-image"; // Apply new class logic
+        if (
+          imageFieldData &&
+          Array.isArray(imageFieldData) &&
+          imageFieldData.length > 0 &&
+          imageFieldData[0].url
+        ) {
+          const imageUrl = imageFieldData[0].url;
+          const imageName = imageFieldData[0].name || "Gedicht afbeelding";
+          imageHTML = `<img src="${imageUrl}" alt="${imageName.replace(
+            /"/g,
+            "&quot;"
+          )}" class="${imageCssClass}" onerror="this.style.display='none'; console.warn('Afbeelding kon niet geladen worden: ${imageUrl}')">`;
+        }
+
+        const cardClasses = isFeatured
+          ? `w-full`
+          : `bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full`;
+
+        const contentPadding = isFeatured ? `p-0` : `p-5 sm:p-6`;
+        const titleSize = isFeatured ? `text-3xl sm:text-4xl` : `text-2xl`;
+        const poemBodyProse = isFeatured
+          ? `prose prose-lg sm:prose-xl max-w-none poem-body-font`
+          : `prose max-w-none poem-body-font`;
+
+        const poemTextForCopy = `${poem[FIELD_ID_TITLE] || ""}\n\n${
+          poem[FIELD_ID_MESSAGE] || ""
+        }`;
+
+        return `
+                <article id="${poemId}" class="${cardClasses}">
+                    <div class="${contentPadding} flex-grow">
+                        ${isFeatured ? imageHTML : ""} 
+                        <h3 class="poem-title-font ${titleSize} font-bold text-rose-700 mb-2">${title}</h3>
+                        <p class="text-xs text-gray-500 mb-4">${createdDate}</p>
+                        ${!isFeatured ? imageHTML : ""} 
+                        <div class="${poemBodyProse} text-gray-700">
+                            ${messageHTML}
+                        </div>
+                    </div>
+                    <div class="bg-rose-50/50 px-5 sm:px-6 py-3 border-t border-rose-200/70 mt-auto">
+                        <div class="flex items-center justify-end space-x-2 sm:space-x-3">
+                            <button data-poem-text="${poemTextForCopy.replace(
+                              /"/g,
+                              "&quot;"
+                            )}" class="copy-text-btn tooltip text-xs sm:text-sm text-rose-600 hover:text-rose-800 transition-colors duration-200 p-1.5 rounded-md hover:bg-rose-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                Kopieer Tekst
+                                <span class="tooltiptext">Kopieer gedichttekst</span>
+                            </button>
+                            <button data-poem-link="${window.location.origin}${
+          window.location.pathname
+        }#${poemId}" class="copy-link-btn tooltip text-xs sm:text-sm text-sky-600 hover:text-sky-800 transition-colors duration-200 p-1.5 rounded-md hover:bg-sky-100">
+                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                Deel Link
+                                <span class="tooltiptext">Kopieer deellink</span>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            `;
+      }
+
+      function addCardButtonListeners(cardElement, poemData) {
+        const currentPoemIdForLog =
+          poemData && typeof poemData.id !== "undefined"
+            ? poemData.id
+            : "onbekend";
+        if (!cardElement) {
+          console.error(
+            `addCardButtonListeners aangeroepen met null cardElement voor gedicht ID: ${currentPoemIdForLog}`
+          );
+          return;
+        }
+        if (!poemData) {
+          console.error(
+            `addCardButtonListeners aangeroepen met null poemData (cardElement was aanwezig voor ID: ${currentPoemIdForLog})`
+          );
+          return;
+        }
+
+        const copyTextBtn = cardElement.querySelector(".copy-text-btn");
+        const copyLinkBtn = cardElement.querySelector(".copy-link-btn");
+
+        if (copyTextBtn) {
+          copyTextBtn.addEventListener("click", (e) => {
+            const textToCopy = e.currentTarget.getAttribute("data-poem-text");
+            copyToClipboard(textToCopy, e.currentTarget);
+          });
+        } else {
+          console.warn(
+            "Kopieer tekst knop niet gevonden in kaart voor gedicht ID:",
+            currentPoemIdForLog
+          );
+        }
+        if (copyLinkBtn) {
+          copyLinkBtn.addEventListener("click", (e) => {
+            const linkToCopy = e.currentTarget.getAttribute("data-poem-link");
+            copyToClipboard(linkToCopy, e.currentTarget);
+          });
+        } else {
+          console.warn(
+            "Deel link knop niet gevonden in kaart voor gedicht ID:",
+            currentPoemIdForLog
+          );
+        }
+      }
+
+      function copyToClipboard(text, buttonElement) {
+        if (text === null || typeof text === "undefined") {
+          console.warn("Poging om null of undefined tekst te kopiëren.");
+          text = "";
+        }
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            const tooltipText = buttonElement.querySelector(".tooltiptext");
+            if (!tooltipText) return;
+            const originalText = tooltipText.textContent;
+            tooltipText.textContent = "Gekopieerd!";
+            buttonElement.classList.add("active");
+
+            setTimeout(() => {
+              tooltipText.textContent = originalText;
+              buttonElement.classList.remove("active");
+            }, 2000);
+          })
+          .catch((err) => {
+            console.error("Kon niet kopiëren: ", err);
+            const tooltipText = buttonElement.querySelector(".tooltiptext");
+            if (!tooltipText) return;
+            const originalText = tooltipText.textContent;
+            tooltipText.textContent = "Kopiëren mislukt!";
+            buttonElement.classList.add("active");
+            setTimeout(() => {
+              tooltipText.textContent = originalText;
+              buttonElement.classList.remove("active");
+            }, 2000);
+          });
+      }
+
+      // --- Initial Load ---
+      document.addEventListener("DOMContentLoaded", () => {
+        marked.setOptions({
+          breaks: true,
+          gfm: true,
+          sanitize: false,
+        });
+        fetchPoems();
+      });
+    </script>
+  </body>
+</html>
